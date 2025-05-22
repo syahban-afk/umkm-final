@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Discount extends Model
 {
-    protected $fillable = ['discount_category_id', 'product_id', 'percentage', 'start_date', 'end_date'];
+    protected $fillable = [
+        'discount_category_id',
+        'percentage',
+        'start_date',
+        'end_date'];
 
     protected $casts = [
         'start_date' => 'date',

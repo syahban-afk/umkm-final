@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DiscountCategory extends Model
 {
-    protected $fillable = ['name', 'description'];
+    protected $fillable = [
+        'name',
+        'description'];
 
     public function discounts(): HasMany
     {

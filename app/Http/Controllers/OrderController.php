@@ -2,51 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    /**
+     * Display a listing of the orders.
+     */
     public function index()
     {
-        $orders = Order::with(['customer', 'orderDetails.product'])->get();
-        return response()->json($orders);
+        $orders = Order::with('customer')->latest()->paginate(10);
+        return view('admin.orders.index', compact('orders'));
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'order_date' => 'required|date',
-            'status' => 'required|string',
-            'total_amount' => 'required|numeric|min:0'
-        ]);
-
-        $order = Order::create($validated);
-        return response()->json($order, 201);
-    }
-
+    /**
+     * Show the details of a specific order.
+     */
     public function show(Order $order)
     {
-        return response()->json($order->load(['customer', 'orderDetails.product']));
+        $order->load(['orderDetails.product', 'customer']);
+        return view('admin.orders.show', compact('order'));
     }
 
-    public function update(Request $request, Order $order)
+    /**
+     * Update the status of an order.
+     */
+    public function updateStatus(Request $request, Order $order)
     {
-        $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'order_date' => 'required|date',
-            'status' => 'required|string',
-            'total_amount' => 'required|numeric|min:0'
+        $request->validate([
+            'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
 
-        $order->update($validated);
-        return response()->json($order);
-    }
+        $order->update([
+            'status' => $request->status,
+        ]);
 
-    public function destroy(Order $order)
-    {
-        $order->delete();
-        return response()->json(null, 204);
+        return redirect()->route('admin.orders.show', $order->id)
+            ->with('success', 'Status pesanan berhasil diperbarui');
     }
 }

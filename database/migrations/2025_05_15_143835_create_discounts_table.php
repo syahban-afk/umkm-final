@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('discounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('discount_category_id')->constrained();
-            $table->foreignId('product_id')->constrained();
             $table->decimal('percentage', 5, 2);
             $table->date('start_date');
             $table->date('end_date');

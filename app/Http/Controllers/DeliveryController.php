@@ -2,53 +2,52 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Delivery;
+use App\Models\Order;
 use Illuminate\Http\Request;
 
 class DeliveryController extends Controller
 {
     public function index()
     {
-        $deliveries = Delivery::with('order')->get();
-        return response()->json($deliveries);
+        $deliveries = Delivery::with(['order', 'order.customer'])->latest()->paginate(10);
+        return view('admin.deliveries.index', compact('deliveries'));
     }
 
-    public function store(Request $request)
+    public function edit(Order $order)
     {
-        $validated = $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'delivery_date' => 'required|date',
-            'courier_name' => 'required|string',
-            'tracking_number' => 'required|string',
-            'status' => 'required|string'
+        $delivery = $order->delivery ?? new Delivery();
+        return view('admin.deliveries.edit', compact('order', 'delivery'));
+    }
+
+    public function update(Request $request, Order $order)
+    {
+        $request->validate([
+            'courier_name' => 'required|string|max:100',
+            'tracking_number' => 'required|string|max:100',
+            'status' => 'required|in:pending,in_transit,delivered',
         ]);
 
-        $delivery = Delivery::create($validated);
-        return response()->json($delivery, 201);
-    }
+        $delivery = $order->delivery ?? new Delivery();
+        $delivery->order_id = $order->id;
+        $delivery->courier_name = $request->courier_name;
+        $delivery->tracking_number = $request->tracking_number;
+        $delivery->status = $request->status;
 
-    public function show(Delivery $delivery)
-    {
-        return response()->json($delivery->load('order'));
-    }
+        // Update delivery_date jika status berubah
+        if ($request->status == 'in_transit' && $delivery->status != 'in_transit') {
+            $delivery->delivery_date = now();
+        }
 
-    public function update(Request $request, Delivery $delivery)
-    {
-        $validated = $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'delivery_date' => 'required|date',
-            'courier_name' => 'required|string',
-            'tracking_number' => 'required|string',
-            'status' => 'required|string'
-        ]);
+        $delivery->save();
 
-        $delivery->update($validated);
-        return response()->json($delivery);
-    }
+        // Update order status jika diperlukan
+        if ($request->status == 'delivered' && $order->status == 'processing') {
+            $order->status = 'completed';
+            $order->save();
+        }
 
-    public function destroy(Delivery $delivery)
-    {
-        $delivery->delete();
-        return response()->json(null, 204);
+        return redirect()->route('admin.deliveries.index')->with('success', 'Status pengiriman berhasil diperbarui');
     }
 }

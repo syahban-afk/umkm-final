@@ -3,17 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Delivery extends Model
 {
-    protected $fillable = ['order_id', 'delivery_date', 'courier_name', 'tracking_number', 'status'];
-
-    protected $casts = [
-        'delivery_date' => 'date'
+    protected $fillable = [
+        'order_id',
+        'courier_name',
+        'tracking_number',
+        'status',
     ];
 
-    public function order(): BelongsTo
+
+    public function order()
     {
         return $this->belongsTo(Order::class);
     }

@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
-    protected $fillable = ['order_id', 'payment_date', 'amount', 'payment_method', 'status'];
+    protected $fillable = [
+        'order_id',
+        'payment_date',
+        'amount',
+        'payment_method',
+        'status'];
 
     protected $casts = [
         'payment_date' => 'datetime'

@@ -7,7 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductReview extends Model
 {
-    protected $fillable = ['customer_id', 'product_id', 'rating', 'comment', 'review_date'];
+    protected $fillable = [
+        'customer_id',
+        'product_id',
+        'rating',
+        'comment',
+        'review_date'
+    ];
 
     protected $casts = [
         'review_date' => 'datetime'
