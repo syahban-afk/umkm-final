@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Product extends Model
 {
@@ -15,13 +16,19 @@ class Product extends Model
         'discount_id',
     ];
 
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(ProductCategory::class, 'product_category_id');
     }
 
-    public function discount()
+    public function discount(): BelongsTo
     {
-        return $this->belongsTo(Discount::class);
+        return $this->belongsTo(Discount::class,'discount_id');
+    }
+
+    // Tambahkan metode alias untuk discounts
+    public function discounts(): BelongsTo
+    {
+        return $this->discount();
     }
 }

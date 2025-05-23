@@ -50,7 +50,7 @@ class ShopController extends Controller
 
         // Cek apakah produk memiliki diskon aktif
         $today = Carbon::now()->toDateString();
-        $activeDiscount = $product->discounts()
+        $activeDiscount = $product->discount()
             ->where('start_date', '<=', $today)
             ->where('end_date', '>=', $today)
             ->first();

@@ -13,18 +13,12 @@
                         @csrf
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <!-- Nama Diskon -->
-                            <div>
-                                <x-input-label for="name" :value="__('Nama Diskon')" />
-                                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus />
-                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                            </div>
 
                             <!-- Persentase -->
                             <div>
-                                <x-input-label for="amount" :value="__('Persentase Diskon (%)')" />
-                                <x-text-input id="amount" class="block mt-1 w-full" type="number" name="amount" :value="old('amount')" min="1" max="100" required />
-                                <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                                <x-input-label for="percentage" :value="__('Persentase Diskon (%)')" />
+                                <x-text-input id="percentage" class="block mt-1 w-full" type="number" name="percentage" :value="old('percentage')" min="1" max="100" required />
+                                <x-input-error :messages="$errors->get('percentage')" class="mt-2" />
                             </div>
 
                             <!-- Tanggal Mulai -->
@@ -43,16 +37,16 @@
 
                             <!-- Kategori -->
                             <div>
-                                <x-input-label for="category_id" :value="__('Kategori Diskon')" />
-                                <select id="category_id" name="category_id" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm block mt-1 w-full">
-                                    <option value="">Pilih Kategori (Opsional)</option>
+                                <x-input-label for="discount_category_id" :value="__('Kategori Diskon')" />
+                                <select id="discount_category_id" name="discount_category_id" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm block mt-1 w-full">
+                                    <option value="">Pilih Kategori</option>
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        <option value="{{ $category->id }}" {{ old('discount_category_id') == $category->id ? 'selected' : '' }}>
                                             {{ $category->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <x-input-error :messages="$errors->get('category_id')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('discount_category_id')" class="mt-2" />
                             </div>
                         </div>
 

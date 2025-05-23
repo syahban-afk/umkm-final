@@ -16,7 +16,7 @@ use App\Http\Controllers\DeliveryController;
 |
 */
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Product Routes
     Route::resource('products', ProductController::class);
 

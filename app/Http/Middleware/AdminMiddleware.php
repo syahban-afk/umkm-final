@@ -14,20 +14,13 @@ class AdminMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    // public function handle(Request $request, Closure $next): Response
-    // {
-    //     if (Auth::check() && Auth::user()->is_admin) {
-    //         return $next($request);
-    //     }
-
-    //     return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
-    // }
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->role === 'admin') {
+        if (Auth::check() && Auth::user()->is_admin) {
             return $next($request);
         }
 
-        abort(403, 'Unauthorized');
+        return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
     }
+
 }

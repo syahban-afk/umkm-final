@@ -33,11 +33,10 @@ class DiscountController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0|max:100',
+            'percentage' => 'required|numeric|min:0|max:100',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'category_id' => 'nullable|exists:discount_categories,id',
+            'discount_category_id' => 'required|exists:discount_categories,id',
         ]);
 
         Discount::create($request->all());
@@ -61,11 +60,10 @@ class DiscountController extends Controller
     public function update(Request $request, Discount $discount)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0|max:100',
+            'percentage' => 'required|numeric|min:0|max:100',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'category_id' => 'nullable|exists:discount_categories,id',
+            'discount_category_id' => 'required|exists:discount_categories,id',
         ]);
 
         $discount->update($request->all());
