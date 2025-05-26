@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\Discount;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -12,50 +11,65 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        // Mengambil semua kategori untuk filter
         $categories = ProductCategory::all();
+        $query = Product::with(['category', 'discount']);
 
-        // Query dasar untuk produk
-        $productsQuery = Product::with(['category', 'discounts'])->latest();
-
-        // Filter berdasarkan kategori
-        if ($request->has('category') && $request->category != '') {
-            $productsQuery->where('product_category_id', $request->category);
+        // Apply category filter
+        if ($request->filled('category')) {
+            $query->where('product_category_id', $request->category);
         }
 
-        // Filter berdasarkan nama produk
-        if ($request->has('search') && $request->search != '') {
-            $productsQuery->where('name', 'like', '%' . $request->search . '%');
+        // Apply search filter
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('description', 'like', '%' . $request->search . '%');
         }
 
-        // Filter berdasarkan diskon aktif
-        if ($request->has('discount') && $request->discount == 'active') {
-            $today = Carbon::now()->toDateString();
-            $productsQuery->whereHas('discounts', function($query) use ($today) {
-                $query->where('start_date', '<=', $today)
-                      ->where('end_date', '>=', $today);
+        // Apply discount filter
+        if ($request->filled('discount') && $request->discount === 'active') {
+            $today = Carbon::now();
+            $query->whereHas('discount', function ($q) use ($today) {
+                $q->where('start_date', '<=', $today)
+                    ->where('end_date', '>=', $today);
             });
         }
 
-        // Mengambil produk dengan pagination
-        $products = $productsQuery->paginate(12);
+        // Sort products
+        $sortBy = $request->get('sort', 'latest');
+        switch ($sortBy) {
+            case 'price_low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            default:
+                $query->latest();
+                break;
+        }
+
+        $products = $query->paginate(12);
 
         return view('shop.index', compact('products', 'categories'));
     }
 
     public function show(Product $product)
     {
-        // Load relasi yang diperlukan
-        $product->load(['category', 'discounts']);
+        $product->load(['category', 'discount', 'reviews.user']);
 
-        // Cek apakah produk memiliki diskon aktif
-        $today = Carbon::now()->toDateString();
-        $activeDiscount = $product->discount()
-            ->where('start_date', '<=', $today)
-            ->where('end_date', '>=', $today)
-            ->first();
+        // Get active discount
+        $activeDiscount = null;
+        if ($product->discount) {
+            $today = Carbon::now();
+            if ($today->between($product->discount->start_date, $product->discount->end_date)) {
+                $activeDiscount = $product->discount;
+            }
+        }
 
-        // Produk terkait dari kategori yang sama
+        // Get related products
         $relatedProducts = Product::where('product_category_id', $product->product_category_id)
             ->where('id', '!=', $product->id)
             ->take(4)

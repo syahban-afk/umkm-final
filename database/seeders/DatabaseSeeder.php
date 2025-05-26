@@ -19,5 +19,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Panggil CartSeeder setelah semua seeder lain dijalankan
+        $this->call([
+            CartSeeder::class,
+        ]);
     }
 }

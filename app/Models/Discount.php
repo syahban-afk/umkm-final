@@ -12,12 +12,19 @@ class Discount extends Model
         'discount_category_id',
         'percentage',
         'start_date',
-        'end_date'];
+        'end_date'
+    ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date'
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('start_date', '<=', now())
+            ->where('end_date', '>=', now());
+    }
 
     public function category(): BelongsTo
     {

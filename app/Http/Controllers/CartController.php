@@ -2,37 +2,65 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
+use App\Models\Cart;
 use App\Models\Product;
-use App\Models\Order;
-use App\Models\OrderDetail;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class CartController extends Controller
 {
+    /**
+     * Display the user's cart.
+     */
     public function index()
     {
-        // Ambil item keranjang dari session
-        $cartItems = session('cart', []);
-        $subtotal = 0;
-
-        // Hitung subtotal
-        foreach ($cartItems as $item) {
-            $subtotal += $item['price'] * $item['quantity'];
+        // Cek apakah user sudah memiliki customer
+        $customer = $this->getOrCreateCustomer();
+        if (!$customer) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
         }
 
-        // Biaya pengiriman (bisa disesuaikan dengan logika bisnis)
+        // Ambil item keranjang dari database dengan relasi diskon aktif
+        $cartItems = Cart::where('customer_id', $customer->id)
+            ->with(['product.category', 'product.discounts' => function ($query) {
+                $query->active(); // Pastikan ada scope active() di model Discount
+            }])
+            ->get()
+            ->each(function ($item) {
+                $item->activeDiscount = $item->product->discounts->first();
+            });
+
+        // Hitung subtotal dan diskon
+        $subtotalBeforeDiscount = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        $totalDiscount = $cartItems->sum(function ($item) {
+            if ($item->activeDiscount) {
+                return ($item->price * $item->activeDiscount->percentage / 100) * $item->quantity;
+            }
+            return 0;
+        });
+
+        $subtotalAfterDiscount = $subtotalBeforeDiscount - $totalDiscount;
         $shippingCost = 10000; // Rp 10.000
+        $total = $subtotalAfterDiscount + $shippingCost;
 
-        // Total keseluruhan
-        $total = $subtotal + $shippingCost;
-
-        return view('shop.cart', compact('cartItems', 'subtotal', 'shippingCost', 'total'));
+        return view('shop.cart', [
+            'cartItems' => $cartItems,
+            'subtotal' => $subtotalAfterDiscount,
+            'subtotalBeforeDiscount' => $subtotalBeforeDiscount,
+            'totalDiscount' => $totalDiscount,
+            'shippingCost' => $shippingCost,
+            'total' => $total
+        ]);
     }
 
+    /**
+     * Add a product to the cart.
+     */
     public function add(Request $request, Product $product)
     {
         $quantity = $request->input('quantity', 1);
@@ -42,160 +70,88 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Stok produk tidak mencukupi.');
         }
 
-        // Ambil keranjang dari session
-        $cart = session()->get('cart', []);
-
-        // Cek apakah produk sudah ada di keranjang
-        if (isset($cart[$product->id])) {
-            // Update quantity jika sudah ada
-            $cart[$product->id]['quantity'] += $quantity;
-        } else {
-            // Tambahkan produk baru ke keranjang
-            $cart[$product->id] = [
-                'id' => $product->id,
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => $quantity,
-                'product' => $product
-            ];
+        // Cek apakah user sudah memiliki customer
+        $customer = $this->getOrCreateCustomer();
+        if (!$customer) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
         }
 
-        // Simpan keranjang ke session
-        session()->put('cart', $cart);
+        // Cek apakah produk sudah ada di keranjang
+        $cartItem = Cart::where('customer_id', $customer->id)
+            ->where('product_id', $product->id)
+            ->first();
+
+        if ($cartItem) {
+            // Update quantity jika produk sudah ada
+            $cartItem->quantity += $quantity;
+            $cartItem->save();
+        } else {
+            // Tambahkan produk baru ke keranjang
+            Cart::create([
+                'customer_id' => $customer->id,
+                'product_id' => $product->id,
+                'quantity' => $quantity,
+                'price' => $product->price
+            ]);
+        }
 
         return redirect()->route('cart.index')->with('success', 'Produk berhasil ditambahkan ke keranjang.');
     }
 
+    /**
+     * Update the quantity of a cart item.
+     */
     public function update(Request $request, $id)
     {
+        $cartItem = Cart::findOrFail($id);
         $quantity = $request->input('quantity');
 
-        // Ambil keranjang dari session
-        $cart = session()->get('cart', []);
-
-        // Update quantity jika produk ada di keranjang
-        if (isset($cart[$id])) {
-            // Validasi stok
-            $product = Product::find($id);
-            if ($product && $product->stock < $quantity) {
-                return redirect()->back()->with('error', 'Stok produk tidak mencukupi.');
-            }
-
-            $cart[$id]['quantity'] = $quantity;
-            session()->put('cart', $cart);
+        // Validasi stok
+        $product = Product::find($cartItem->product_id);
+        if ($product && $product->stock < $quantity) {
+            return redirect()->back()->with('error', 'Stok produk tidak mencukupi.');
         }
+
+        // Update quantity
+        $cartItem->quantity = $quantity;
+        $cartItem->save();
 
         return redirect()->route('cart.index')->with('success', 'Keranjang berhasil diperbarui.');
     }
 
+    /**
+     * Remove a cart item.
+     */
     public function remove($id)
     {
-        // Ambil keranjang dari session
-        $cart = session()->get('cart', []);
-
-        // Hapus produk dari keranjang jika ada
-        if (isset($cart[$id])) {
-            unset($cart[$id]);
-            session()->put('cart', $cart);
-        }
+        $cartItem = Cart::findOrFail($id);
+        $cartItem->delete();
 
         return redirect()->route('cart.index')->with('success', 'Produk berhasil dihapus dari keranjang.');
     }
 
-    public function checkout(Request $request)
+    /**
+     * Get or create customer for the authenticated user.
+     */
+    private function getOrCreateCustomer()
     {
-        // Validasi data
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string',
-            'city' => 'required|string|max:100',
-            'postal_code' => 'required|string|max:10',
-            'payment_method' => 'required|string'
-        ]);
+        $user = Auth::user();
 
-        // Ambil keranjang dari session
-        $cart = session()->get('cart', []);
+        // Cek apakah user sudah memiliki customer
+        $customer = Customer::where('user_id', $user->id)->first();
 
-        // Cek apakah keranjang kosong
-        if (empty($cart)) {
-            return redirect()->route('cart.index')->with('error', 'Keranjang belanja kosong.');
+        if (!$customer && $user->email) {
+            // Buat customer baru jika belum ada
+            $customer = Customer::create([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => '',  // Perlu diisi oleh user
+                'address' => '' // Perlu diisi oleh user
+            ]);
         }
 
-        try {
-            DB::beginTransaction();
-
-            // Cek atau buat data customer
-            $customer = Auth::user()->customer;
-            if (!$customer) {
-                // Buat customer baru jika belum ada
-                $customer = Customer::create([
-                    'user_id' => Auth::id(),
-                    'name' => $validated['name'],
-                    'phone' => $validated['phone'],
-                    'address' => $validated['address'] . ', ' . $validated['city'] . ' ' . $validated['postal_code']
-                ]);
-            }
-
-            // Hitung total
-            $subtotal = 0;
-            foreach ($cart as $item) {
-                $subtotal += $item['price'] * $item['quantity'];
-            }
-
-            // Biaya pengiriman
-            $shippingCost = 10000; // Rp 10.000
-
-            // Total keseluruhan
-            $total = $subtotal + $shippingCost;
-
-            // Buat order baru
-            $order = Order::create([
-                'customer_id' => $customer->id,
-                'order_date' => Carbon::now(),
-                'status' => 'pending',
-                'total_amount' => $total
-            ]);
-
-            // Buat detail order
-            foreach ($cart as $item) {
-                OrderDetail::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price']
-                ]);
-
-                // Kurangi stok produk
-                $product = Product::find($item['id']);
-                $product->stock -= $item['quantity'];
-                $product->save();
-            }
-
-            // Buat data pengiriman
-            $order->delivery()->create([
-                'status' => 'pending',
-                'shipping_cost' => $shippingCost,
-                'address' => $validated['address'] . ', ' . $validated['city'] . ' ' . $validated['postal_code']
-            ]);
-
-            // Buat data pembayaran
-            $order->payment()->create([
-                'payment_method' => $validated['payment_method'],
-                'amount' => $total,
-                'status' => 'pending'
-            ]);
-
-            DB::commit();
-
-            // Kosongkan keranjang
-            session()->forget('cart');
-
-            return redirect()->route('orders.payment', $order->id)->with('success', 'Pesanan berhasil dibuat. Silakan lakukan pembayaran.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
+        return $customer;
     }
 }
