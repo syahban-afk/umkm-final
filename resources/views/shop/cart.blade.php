@@ -57,7 +57,7 @@
                                                             <span
                                                                 class="text-gray-500 dark:text-gray-400 line-through">Rp
                                                                 {{ number_format($item->price, 0, ',', '.') }}</span>
-                                                            <span class="text-red-600 dark:text-red-400 font-medium">
+                                                            <span class="text-green-600 dark:text-green-400 font-medium">
                                                                 Rp
                                                                 {{ number_format($item->price * (1 - $item->activeDiscount->percentage / 100), 0, ',', '.') }}
                                                             </span>
@@ -141,7 +141,7 @@
                                                                 Rp
                                                                 {{ number_format($item->price * $item->quantity, 0, ',', '.') }}
                                                             </span>
-                                                            <span class="text-red-600 dark:text-red-400">
+                                                            <span class="text-green-600 dark:text-green-400">
                                                                 Rp
                                                                 {{ number_format($item->price * (1 - $item->activeDiscount->percentage / 100) * $item->quantity, 0, ',', '.') }}
                                                             </span>
@@ -254,32 +254,40 @@
                                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Ringkasan Pesanan
                                 </h3>
                                 <div class="space-y-4">
+
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Total Belanjaan</span>
+                                        <span class="text-gray-900 dark:text-white font-medium">
+                                            Rp
+                                            {{ number_format($item->price * $item->quantity, 0, ',', '.') }}
+                                    </div>
+
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Total Discount</span>
+                                        <span class="text-green-600 dark:text-green-400 font-medium">
+                                            Rp
+                                            {{ number_format($item->price * $item->quantity - $subtotal, 0, ',', '.') }}
+                                    </div>
+
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Subtotal</span>
                                         <span class="text-gray-900 dark:text-white">Rp
                                             {{ number_format($subtotal, 0, ',', '.') }}</span>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400">Total Discount</span>
-                                        {{-- <span class="text-red-600 dark:text-red-400 font-medium">
-                                            Rp
-                                            {{ number_format($item->price * (1 - $item->activeDiscount->percentage / 100), 0, ',', '.') }} --}}
-                                            <span
-                                                class="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded ml-1">
-                                                -{{ $item->activeDiscount->percentage }}%
-                                            </span>
-                                    </div>
+
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Biaya Pengiriman</span>
                                         <span class="text-gray-900 dark:text-white">Rp
                                             {{ number_format($shippingCost, 0, ',', '.') }}</span>
                                     </div>
+
                                     <div
                                         class="border-t border-gray-200 dark:border-gray-700 pt-4 flex justify-between font-medium">
                                         <span class="text-gray-900 dark:text-white">Total</span>
                                         <span class="text-gray-900 dark:text-white">Rp
                                             {{ number_format($total, 0, ',', '.') }}</span>
                                     </div>
+
                                 </div>
                                 <div class="mt-6">
                                     <button type="submit" form="checkout-form"

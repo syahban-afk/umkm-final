@@ -1,9 +1,4 @@
 <x-shop-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Produk Kami') }}
-        </h2>
-    </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -119,7 +114,7 @@
                                         <span class="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
                                             Rp {{ number_format($product->price, 0, ',', '.') }}
                                         </span>
-                                        <span class="ml-2 text-xs font-semibold text-white bg-red-500 px-2 py-1 rounded">
+                                        <span class="ml-2 text-xs font-semibold text-white bg-green-500 px-2 py-1 rounded">
                                             -{{ $activeDiscount->percentage }}%
                                         </span>
                                     </div>
