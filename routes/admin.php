@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DiscountController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\DeliveryController as AdminDeliveryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,12 +35,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('discount-categories/{category}', [DiscountController::class, 'categoryDestroy'])->name('discount-categories.destroy');
 
     // Order Routes
-    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::patch('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
 
     // Delivery Routes
-    Route::get('/deliveries', [DeliveryController::class, 'index'])->name('deliveries.index');
-    Route::get('/deliveries/{order}/edit', [DeliveryController::class, 'edit'])->name('deliveries.edit');
-    Route::put('/deliveries/{order}', [DeliveryController::class, 'update'])->name('deliveries.update');
+    Route::get('/deliveries', [AdminDeliveryController::class, 'index'])->name('deliveries.index');
+    Route::get('/deliveries/{order}/edit', [AdminDeliveryController::class, 'edit'])->name('deliveries.edit');
+    Route::put('/deliveries/{order}', [AdminDeliveryController::class, 'update'])->name('deliveries.update');
 });

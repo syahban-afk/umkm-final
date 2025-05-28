@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -10,44 +11,42 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the products.
-     */
     public function index()
     {
         $products = Product::with(['category', 'discount'])->latest()->paginate(10);
         return view('admin.products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new product.
-     */
     public function create()
     {
         $categories = ProductCategory::all();
-        $discounts = Discount::all();
+        $discounts = Discount::with('category')->get();
         return view('admin.products.create', compact('categories', 'discounts'));
     }
 
-    /**
-     * Store a newly created product in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'product_category_id' => 'required|exists:product_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
+            'discount_id' => 'nullable|exists:discounts,id', // Pastikan nama field sesuai
         ]);
 
-        $data = $request->all();
+        $data = [
+            'name' => $validated['name'],
+            'price' => $validated['price'],
+            'stock' => $validated['stock'],
+            'product_category_id' => $validated['product_category_id'],
+            'description' => $validated['description'],
+            'discount_id' => $validated['discount_id'] ?? null, // Pastikan null jika kosong
+        ];
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
-            $data['image'] = $imagePath;
+            $data['image'] = $request->file('image')->store('products', 'public');
         }
 
         Product::create($data);
@@ -56,41 +55,39 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil ditambahkan');
     }
 
-    /**
-     * Show the form for editing the specified product.
-     */
     public function edit(Product $product)
     {
         $categories = ProductCategory::all();
-        $discounts = Discount::all();
+        $discounts = Discount::with('category')->get();
         return view('admin.products.edit', compact('product', 'categories', 'discounts'));
     }
 
-    /**
-     * Update the specified product in storage.
-     */
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'category_id' => 'required|exists:product_categories,id',
+            'product_category_id' => 'required|exists:product_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
             'discount_id' => 'nullable|exists:discounts,id',
         ]);
 
-        $data = $request->all();
+        $data = [
+            'name' => $validated['name'],
+            'price' => $validated['price'],
+            'stock' => $validated['stock'],
+            'product_category_id' => $validated['product_category_id'],
+            'description' => $validated['description'],
+            'discount_id' => $validated['discount_id'] ?? null,
+        ];
 
         if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-
-            $imagePath = $request->file('image')->store('products', 'public');
-            $data['image'] = $imagePath;
+            $data['image'] = $request->file('image')->store('products', 'public');
         }
 
         $product->update($data);
@@ -99,12 +96,8 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil diperbarui');
     }
 
-    /**
-     * Remove the specified product from storage.
-     */
     public function destroy(Product $product)
     {
-        // Hapus gambar jika ada
         if ($product->image) {
             Storage::disk('public')->delete($product->image);
         }

@@ -55,7 +55,7 @@
                                     <option value="">Pilih Diskon (Opsional)</option>
                                     @foreach ($discounts as $discount)
                                         <option value="{{ $discount->id }}" {{ old('discount_id') == $discount->id ? 'selected' : '' }}>
-                                            {{ $discount->name }} ({{ $discount->amount }}%)
+                                            {{ $discount->category->name }} ({{ $discount->percentage }}%)
                                         </option>
                                     @endforeach
                                 </select>

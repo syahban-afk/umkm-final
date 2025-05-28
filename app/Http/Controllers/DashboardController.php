@@ -35,6 +35,9 @@ class DashboardController extends Controller
             // Cari customer_id berdasarkan user yang login
             $customer = Customer::where('email', Auth::user()->email)->first();
 
+            // Ambil produk terbaru untuk ditampilkan di dashboard
+            $latestProducts = Product::latest()->take(4)->get();
+
             if ($customer) {
                 $customerOrders = Order::where('customer_id', $customer->id)
                     ->orderBy('created_at', 'desc')
@@ -49,14 +52,16 @@ class DashboardController extends Controller
                 return view('dashboard', compact(
                     'customerOrders',
                     'totalCustomerOrders',
-                    'lastOrder'
+                    'lastOrder',
+                    'latestProducts'
                 ));
             } else {
                 // Jika customer belum memiliki data
                 return view('dashboard', [
                     'customerOrders' => collect(),
                     'totalCustomerOrders' => 0,
-                    'lastOrder' => null
+                    'lastOrder' => null,
+                    'latestProducts' => $latestProducts
                 ]);
             }
         }
