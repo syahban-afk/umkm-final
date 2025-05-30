@@ -56,47 +56,33 @@ class WishlistController extends Controller
 
     public function add(Product $product)
     {
-        // Cek apakah user sudah memiliki customer
-        if (!Auth::user()->customer) {
-            if (request()->ajax()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Profil customer belum lengkap.'
-                ], 400);
+        try {
+            // Cek apakah user sudah memiliki customer profile
+            if (!Auth::user()->customer) {
+                return redirect()->back()->with('error', 'Anda perlu melengkapi profil customer terlebih dahulu.');
             }
-            return redirect()->back()->with('error', 'Profil customer belum lengkap.');
-        }
 
-        // Cek apakah produk sudah ada di wishlist
-        $wishlist = Wishlist::where('customer_id', Auth::user()->customer->id)
-            ->where('product_id', $product->id)
-            ->first();
+            // Cek apakah produk sudah ada di wishlist
+            $wishlist = Wishlist::where('customer_id', Auth::user()->customer->id)
+                ->where('product_id', $product->id)
+                ->first();
 
-        // Jika sudah ada, hapus dari wishlist (toggle)
-        if ($wishlist) {
-            $wishlist->delete();
-            if (request()->ajax()) {
-                return response()->json([
-                    'status' => 'removed',
-                    'message' => 'Produk berhasil dihapus dari wishlist.'
-                ]);
+            // Jika sudah ada, hapus dari wishlist
+            if ($wishlist) {
+                $wishlist->delete();
+                return redirect()->back()->with('success', 'Produk berhasil dihapus dari wishlist.');
             }
-            return redirect()->back()->with('success', 'Produk berhasil dihapus dari wishlist.');
-        }
 
-        // Tambahkan ke wishlist
-        Wishlist::create([
-            'customer_id' => Auth::user()->customer->id,
-            'product_id' => $product->id
-        ]);
-
-        if (request()->ajax()) {
-            return response()->json([
-                'status' => 'added',
-                'message' => 'Produk berhasil ditambahkan ke wishlist.'
+            // Jika belum ada, tambahkan ke wishlist
+            Wishlist::create([
+                'customer_id' => Auth::user()->customer->id,
+                'product_id' => $product->id
             ]);
+
+            return redirect()->back()->with('success', 'Produk berhasil ditambahkan ke wishlist.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memproses wishlist.');
         }
-        return redirect()->back()->with('success', 'Produk berhasil ditambahkan ke wishlist.');
     }
 
     public function remove($id)

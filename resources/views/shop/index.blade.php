@@ -102,29 +102,37 @@
 
                             <div class="flex justify-between items-start mb-2">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    <a href="{{ route('shop.show', $product) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                                    <a href="{{ route('shop.show', $product) }}"
+                                        class="hover:text-indigo-600 dark:hover:text-indigo-400">
                                         {{ $product->name }}
                                     </a>
                                 </h3>
                                 @auth
-                                @php
-                                    $inWishlist = false;
-                                    if (Auth::user()->customer) {
-                                        $inWishlist = \App\Models\Wishlist::where('customer_id', Auth::user()->customer->id)
-                                            ->where('product_id', $product->id)
-                                            ->exists();
-                                    }
-                                @endphp
-                                <button type="button"
-                                    class="wishlist-toggle ml-2 transition-colors duration-300"
-                                    data-product-id="{{ $product->id }}"
-                                    data-in-wishlist="{{ $inWishlist ? 'true' : 'false' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 {{ $inWishlist ? 'text-red-500 fill-current' : 'text-gray-400' }}"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                    </svg>
-                                </button>
+                                    @php
+                                        $inWishlist = false;
+                                        $hasCustomer = Auth::user()->customer ? true : false;
+                                        if ($hasCustomer) {
+                                            $inWishlist = \App\Models\Wishlist::where(
+                                                'customer_id',
+                                                Auth::user()->customer->id,
+                                            )
+                                                ->where('product_id', $product->id)
+                                                ->exists();
+                                        }
+                                    @endphp
+                                    <form action="{{ route('wishlist.add', $product->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="ml-2 transition-colors duration-300 {{ !$hasCustomer ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                            {{ !$hasCustomer ? 'disabled' : '' }}
+                                            title="{{ $inWishlist ? 'Hapus dari wishlist' : 'Tambah ke wishlist' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="h-6 w-6 {{ $inWishlist ? 'text-red-500 fill-current' : 'text-gray-400' }}"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                            </svg>
+                                        </button>
+                                    </form>
                                 @endauth
                             </div>
 
@@ -201,45 +209,5 @@
 </x-shop-layout>
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const wishlistButtons = document.querySelectorAll('.wishlist-toggle');
-
-        wishlistButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = this.dataset.productId;
-                const inWishlist = this.dataset.inWishlist === 'true';
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const icon = this.querySelector('svg');
-
-                fetch(`/wishlist/add/${productId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'added') {
-                        // Produk ditambahkan ke wishlist
-                        icon.classList.add('text-red-500', 'fill-current');
-                        icon.classList.remove('text-gray-400');
-                        this.dataset.inWishlist = 'true';
-                    } else {
-                        // Produk dihapus dari wishlist
-                        icon.classList.remove('text-red-500', 'fill-current');
-                        icon.classList.add('text-gray-400');
-                        this.dataset.inWishlist = 'false';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            });
-        });
-    });
-</script>
+    <!-- Script untuk tab switching di halaman wishlist tetap dipertahankan -->
 @endpush

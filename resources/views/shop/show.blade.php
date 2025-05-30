@@ -46,7 +46,7 @@
                             </div>
 
                             <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">{{ $product->name }}
-                            </h1>
+                                </h1>
 
                             <!-- Price & Discount -->
                             <div class="mb-6">

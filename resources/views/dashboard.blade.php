@@ -248,7 +248,7 @@
                                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
                                             <td
                                                 class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                {{ $order->id }}</td>
+                                                {{ $loop->iteration }}</td>
                                             <td
                                                 class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {{ $order->order_date->format('d M Y') }}</td>

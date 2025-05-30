@@ -39,7 +39,7 @@
                             <tbody class="text-gray-600 dark:text-gray-200 text-sm">
                                 @forelse ($orders as $order)
                                     <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <td class="py-3 px-6">{{ $order->id }}</td>
+                                        <td class="py-3 px-6">{{ $loop->iteration }}</td>
                                         <td class="py-3 px-6">{{ $order->customer->name ?? '-' }}</td>
                                         <td class="py-3 px-6">{{ $order->order_date->format('d M Y H:i') }}</td>
                                         <td class="py-3 px-6">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
