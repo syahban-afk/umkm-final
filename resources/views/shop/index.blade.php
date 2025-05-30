@@ -18,14 +18,16 @@
 
                             <!-- Filter berdasarkan kategori -->
                             <div>
-                                <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="category"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Kategori
                                 </label>
                                 <select name="category" id="category"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <option value="">Semua Kategori</option>
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                        <option value="{{ $category->id }}"
+                                            {{ request('category') == $category->id ? 'selected' : '' }}>
                                             {{ $category->name }}
                                         </option>
                                     @endforeach
@@ -34,7 +36,8 @@
 
                             <!-- Filter berdasarkan diskon -->
                             <div>
-                                <label for="discount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="discount"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Diskon
                                 </label>
                                 <select name="discount" id="discount"
@@ -57,14 +60,16 @@
                 </div>
             </div>
 
-            @if(session('success'))
-                <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            @if (session('success'))
+                <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+                    role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
             @endif
 
-            @if(session('error'))
-                <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            @if (session('error'))
+                <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+                    role="alert">
                     <span class="block sm:inline">{{ session('error') }}</span>
                 </div>
             @endif
@@ -72,14 +77,17 @@
             <!-- Products Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 @forelse($products as $product)
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow duration-300">
+                    <div
+                        class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow duration-300">
                         <div class="p-4">
-                            @if($product->image)
+                            @if ($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
                                     class="w-full h-48 object-cover rounded-md mb-4">
                             @else
-                                <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 flex items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div
+                                    class="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                                         </path>
@@ -87,34 +95,60 @@
                                 </div>
                             @endif
 
-                            <div class="text-xs text-indigo-600 dark:text-indigo-400 uppercase font-semibold tracking-wide mb-1">
+                            <div
+                                class="text-xs text-indigo-600 dark:text-indigo-400 uppercase font-semibold tracking-wide mb-1">
                                 {{ $product->category->name }}
                             </div>
 
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                                <a href="{{ route('shop.show', $product) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
-                                    {{ $product->name }}
-                                </a>
-                            </h3>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    <a href="{{ route('shop.show', $product) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                                        {{ $product->name }}
+                                    </a>
+                                </h3>
+                                @auth
+                                @php
+                                    $inWishlist = false;
+                                    if (Auth::user()->customer) {
+                                        $inWishlist = \App\Models\Wishlist::where('customer_id', Auth::user()->customer->id)
+                                            ->where('product_id', $product->id)
+                                            ->exists();
+                                    }
+                                @endphp
+                                <button type="button"
+                                    class="wishlist-toggle ml-2 transition-colors duration-300"
+                                    data-product-id="{{ $product->id }}"
+                                    data-in-wishlist="{{ $inWishlist ? 'true' : 'false' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 {{ $inWishlist ? 'text-red-500 fill-current' : 'text-gray-400' }}"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                </button>
+                                @endauth
+                            </div>
 
                             <div class="mb-2">
                                 @php
                                     $today = \Carbon\Carbon::now()->toDateString();
-                                    $activeDiscount = $product->discounts()
+                                    $activeDiscount = $product
+                                        ->discounts()
                                         ->where('start_date', '<=', $today)
                                         ->where('end_date', '>=', $today)
                                         ->first();
                                 @endphp
 
-                                @if($activeDiscount)
+                                @if ($activeDiscount)
                                     <div class="flex items-center">
                                         <span class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                            Rp {{ number_format(($product->price * (100 - $activeDiscount->percentage)) / 100, 0, ',', '.') }}
+                                            Rp
+                                            {{ number_format(($product->price * (100 - $activeDiscount->percentage)) / 100, 0, ',', '.') }}
                                         </span>
                                         <span class="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
                                             Rp {{ number_format($product->price, 0, ',', '.') }}
                                         </span>
-                                        <span class="ml-2 text-xs font-semibold text-white bg-green-500 px-2 py-1 rounded">
+                                        <span
+                                            class="ml-2 text-xs font-semibold text-white bg-green-500 px-2 py-1 rounded">
                                             -{{ $activeDiscount->percentage }}%
                                         </span>
                                     </div>
@@ -142,7 +176,8 @@
                     </div>
                 @empty
                     <div class="col-span-full text-center py-12">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                             </path>
@@ -164,3 +199,47 @@
         </div>
     </div>
 </x-shop-layout>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const wishlistButtons = document.querySelectorAll('.wishlist-toggle');
+
+        wishlistButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const inWishlist = this.dataset.inWishlist === 'true';
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const icon = this.querySelector('svg');
+
+                fetch(`/wishlist/add/${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'added') {
+                        // Produk ditambahkan ke wishlist
+                        icon.classList.add('text-red-500', 'fill-current');
+                        icon.classList.remove('text-gray-400');
+                        this.dataset.inWishlist = 'true';
+                    } else {
+                        // Produk dihapus dari wishlist
+                        icon.classList.remove('text-red-500', 'fill-current');
+                        icon.classList.add('text-gray-400');
+                        this.dataset.inWishlist = 'false';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    });
+</script>
+@endpush

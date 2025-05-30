@@ -29,13 +29,20 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         @foreach ($wishlists as $item)
                             <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                                <div class="bg-gray-200 dark:bg-gray-700 h-48 flex items-center justify-center">
-                                    <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                        </path>
-                                    </svg>
+                                <div class="h-48">
+                                    @if($item->product->image)
+                                        <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}"
+                                            class="w-full h-full object-cover">
+                                    @else
+                                        <div class="bg-gray-200 dark:bg-gray-700 h-full flex items-center justify-center">
+                                            <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                </path>
+                                            </svg>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="p-4">
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-white truncate">
@@ -43,8 +50,31 @@
                                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                         {{ $item->product->category->name }}</p>
                                     <div class="mt-2 flex items-center justify-between">
-                                        <span class="text-gray-900 dark:text-white font-bold">Rp
-                                            {{ number_format($item->product->price, 0, ',', '.') }}</span>
+                                        @php
+                                            $today = \Carbon\Carbon::now()->toDateString();
+                                            $activeDiscount = $item->product->discounts()
+                                                ->where('start_date', '<=', $today)
+                                                ->where('end_date', '>=', $today)
+                                                ->first();
+                                        @endphp
+
+                                        @if($activeDiscount)
+                                            <div class="flex items-center">
+                                                <span class="text-gray-900 dark:text-white font-bold">
+                                                    Rp {{ number_format(($item->product->price * (100 - $activeDiscount->percentage)) / 100, 0, ',', '.') }}
+                                                </span>
+                                                <span class="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
+                                                    Rp {{ number_format($item->product->price, 0, ',', '.') }}
+                                                </span>
+                                                <span class="ml-2 text-xs font-semibold text-white bg-green-500 px-2 py-1 rounded">
+                                                    -{{ $activeDiscount->percentage }}%
+                                                </span>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-900 dark:text-white font-bold">
+                                                Rp {{ number_format($item->product->price, 0, ',', '.') }}
+                                            </span>
+                                        @endif
                                     </div>
                                     <div class="mt-4 flex space-x-2">
                                         <a href="{{ route('shop.show', $item->product->id) }}"
@@ -93,22 +123,25 @@
                 @if (isset($purchasedProducts) && count($purchasedProducts) > 0)
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Produk yang Dapat
-                                Direview</h3>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Produk yang Dapat Direview</h3>
                             <div class="space-y-6">
                                 @foreach ($purchasedProducts as $product)
-                                    <div
-                                        class="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-b-0 last:pb-0">
+                                    <div class="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-b-0 last:pb-0">
                                         <div class="flex items-start">
-                                            <div
-                                                class="flex-shrink-0 h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                                                <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                                    </path>
-                                                </svg>
+                                            <div class="flex-shrink-0 h-12 w-12 overflow-hidden rounded-md">
+                                                @if($product->image)
+                                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                                                        class="w-full h-full object-cover">
+                                                @else
+                                                    <div class="bg-gray-200 dark:bg-gray-700 h-full w-full flex items-center justify-center">
+                                                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                            </path>
+                                                        </svg>
+                                                    </div>
+                                                @endif
                                             </div>
                                             <div class="ml-4 flex-1">
                                                 <div class="flex items-center justify-between">

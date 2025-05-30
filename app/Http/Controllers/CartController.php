@@ -169,9 +169,10 @@ class CartController extends Controller
             ->with(['product.category', 'product.discounts' => function ($query) {
                 $query->active();
             }])
+            ->has('product')
             ->get()
             ->each(function ($item) {
-                $item->activeDiscount = $item->product->discounts->first();
+                $item->activeDiscount = optional($item->product?->discounts)->first();
             });
 
         // Cek jika keranjang kosong

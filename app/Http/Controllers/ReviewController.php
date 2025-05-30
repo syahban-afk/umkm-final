@@ -18,9 +18,14 @@ class ReviewController extends Controller
             'comment' => 'required|string|max:500',
         ]);
 
+        // Pastikan user memiliki customer
+        if (!Auth::user()->customer) {
+            return redirect()->route('profile.edit')->with('error', 'Profil customer belum lengkap.');
+        }
+
         $review = new ProductReview();
         $review->product_id = $request->product_id;
-        $review->user_id = Auth::id();
+        $review->customer_id = Auth::user()->customer->id;
         $review->rating = $request->rating;
         $review->comment = $request->comment;
         $review->review_date = Carbon::now();
@@ -32,7 +37,7 @@ class ReviewController extends Controller
     public function destroy(ProductReview $review)
     {
         // Pastikan user hanya bisa menghapus review miliknya
-        if ($review->user_id != Auth::id()) {
+        if (!Auth::user()->customer || $review->customer_id != Auth::user()->customer->id) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menghapus ulasan ini');
         }
 

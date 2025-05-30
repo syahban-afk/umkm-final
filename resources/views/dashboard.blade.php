@@ -1,8 +1,20 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                {{ __('Dashboard') }}
+            </h2>
+
+            @if (auth()->user()->role === 'customer')
+                <form action="{{ route('become.admin') }}" method="POST" class="mt-4 md:mt-0">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        Buka Toko Sekarang
+                    </button>
+                </form>
+            @endif
+        </div>
+
     </x-slot>
 
     <div class="py-12">
@@ -159,19 +171,6 @@
                 </div>
             @else
                 <!-- Customer Dashboard -->
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    @if (auth()->user()->role === 'customer')
-                        <form action="{{ route('become.admin') }}" method="POST">
-                            @csrf
-                            <button type="submit"
-                                class="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                                Buka Toko Sekarang
-                            </button>
-                        </form>
-                    @endif
-                </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div
                         class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg transition duration-300 hover:shadow-md">

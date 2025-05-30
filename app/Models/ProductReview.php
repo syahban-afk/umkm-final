@@ -28,4 +28,15 @@ class ProductReview extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'customer_id', 'id');
+    }
+
+    // Accessor untuk mendapatkan user_id dari customer_id
+    public function getUserIdAttribute()
+    {
+        return $this->customer->user_id;
+    }
 }

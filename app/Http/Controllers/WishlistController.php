@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Wishlist;
 use App\Models\Product;
+use App\Models\Order;
+use App\Models\ProductReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,28 +13,75 @@ class WishlistController extends Controller
 {
     public function index()
     {
+        // Cek apakah user sudah memiliki customer
+        if (!Auth::user()->customer) {
+            return redirect()->route('profile.edit')->with('error', 'Profil customer belum lengkap.');
+        }
+
         // Ambil wishlist user yang sedang login
         $wishlists = Wishlist::where('customer_id', Auth::user()->customer->id)
-            ->with('product')
+            ->with('product.category')
             ->get();
 
-        return view('shop.wishlist', compact('wishlists'));
+        // Ambil produk yang telah dibeli oleh user
+        $purchasedProducts = collect();
+
+        // Ambil semua order milik customer
+        $orders = Order::where('customer_id', Auth::user()->customer->id)
+            ->where('status', 'completed')
+            ->with('orderDetails.product.category')
+            ->get();
+
+        // Kumpulkan semua produk yang telah dibeli
+        foreach ($orders as $order) {
+            foreach ($order->orderDetails as $detail) {
+                // Tambahkan informasi tanggal pembelian ke produk
+                $product = $detail->product;
+                $product->pivot = (object)[
+                    'created_at' => $order->order_date
+                ];
+
+                // Cek apakah produk sudah memiliki review dari user ini
+                $product->userReview = $product->reviewByUser(Auth::id());
+
+                // Tambahkan ke koleksi jika belum ada
+                if (!$purchasedProducts->contains('id', $product->id)) {
+                    $purchasedProducts->push($product);
+                }
+            }
+        }
+
+        return view('shop.wishlist', compact('wishlists', 'purchasedProducts'));
     }
 
     public function add(Product $product)
     {
         // Cek apakah user sudah memiliki customer
         if (!Auth::user()->customer) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Profil customer belum lengkap.'
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Profil customer belum lengkap.');
         }
 
         // Cek apakah produk sudah ada di wishlist
-        $exists = Wishlist::where('customer_id', Auth::user()->customer->id)
+        $wishlist = Wishlist::where('customer_id', Auth::user()->customer->id)
             ->where('product_id', $product->id)
-            ->exists();
+            ->first();
 
-        if ($exists) {
-            return redirect()->back()->with('info', 'Produk sudah ada di wishlist.');
+        // Jika sudah ada, hapus dari wishlist (toggle)
+        if ($wishlist) {
+            $wishlist->delete();
+            if (request()->ajax()) {
+                return response()->json([
+                    'status' => 'removed',
+                    'message' => 'Produk berhasil dihapus dari wishlist.'
+                ]);
+            }
+            return redirect()->back()->with('success', 'Produk berhasil dihapus dari wishlist.');
         }
 
         // Tambahkan ke wishlist
@@ -41,6 +90,12 @@ class WishlistController extends Controller
             'product_id' => $product->id
         ]);
 
+        if (request()->ajax()) {
+            return response()->json([
+                'status' => 'added',
+                'message' => 'Produk berhasil ditambahkan ke wishlist.'
+            ]);
+        }
         return redirect()->back()->with('success', 'Produk berhasil ditambahkan ke wishlist.');
     }
 
