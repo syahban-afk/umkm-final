@@ -8,6 +8,8 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Payment;
+use App\Models\Wishlist;
+use App\Models\ProductReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -52,13 +54,55 @@ class CartController extends Controller
         $shippingCost = 10000; // Rp 10.000
         $total = $subtotalAfterDiscount + $shippingCost;
 
+        // Ambil wishlist user
+        $wishlist = Wishlist::where('customer_id', $customer->id)
+            ->with('product.category')
+            ->get();
+
+        // Ambil orders user
+        $orders = Order::where('customer_id', $customer->id)
+            ->with(['payment'])
+            ->latest()
+            ->paginate(10);
+
+        // Ambil produk yang telah dibeli oleh user untuk review
+        $reviewableProducts = collect();
+
+        // Ambil semua order milik customer yang sudah completed
+        $completedOrders = Order::where('customer_id', $customer->id)
+            ->where('status', 'completed')
+            ->with('orderDetails.product.category')
+            ->get();
+
+        // Kumpulkan semua produk yang telah dibeli
+        foreach ($completedOrders as $order) {
+            foreach ($order->orderDetails as $detail) {
+                // Tambahkan informasi tanggal pembelian ke produk
+                $product = $detail->product;
+                $product->pivot = (object)[
+                    'created_at' => $order->order_date
+                ];
+
+                // Cek apakah produk sudah memiliki review dari user ini
+                $product->userReview = $product->reviewByUser(Auth::id());
+
+                // Tambahkan ke koleksi jika belum ada
+                if (!$reviewableProducts->contains('id', $product->id)) {
+                    $reviewableProducts->push($product);
+                }
+            }
+        }
+
         return view('shop.cart', [
             'cartItems' => $cartItems,
             'subtotal' => $subtotalAfterDiscount,
             'subtotalBeforeDiscount' => $subtotalBeforeDiscount,
             'totalDiscount' => $totalDiscount,
             'shippingCost' => $shippingCost,
-            'total' => $total
+            'total' => $total,
+            'wishlist' => $wishlist,
+            'orders' => $orders,
+            'reviewableProducts' => $reviewableProducts
         ]);
     }
 
@@ -262,7 +306,7 @@ class CartController extends Controller
         // Pastikan user hanya bisa melihat pesanan miliknya sendiri
         $customer = $this->getOrCreateCustomer();
         if (!$customer || $order->customer_id !== $customer->id) {
-            return redirect()->route('orders.index')
+            return redirect()->route('cart.index')
                 ->with('error', 'Anda tidak memiliki akses ke pesanan ini.');
         }
 

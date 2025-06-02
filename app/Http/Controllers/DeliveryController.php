@@ -30,21 +30,25 @@ class DeliveryController extends Controller
         ]);
 
         $delivery = $order->delivery ?? new Delivery();
+        $oldStatus = $delivery->status ?? null;
+        $newStatus = $request->status;
+
         $delivery->order_id = $order->id;
         $delivery->courier_name = $request->courier_name;
         $delivery->tracking_number = $request->tracking_number;
-        $delivery->status = $request->status;
+        $delivery->status = $newStatus;
 
-        // Update delivery_date jika status berubah
-        if ($request->status == 'in_transit' && $delivery->status != 'in_transit') {
+        if ($newStatus == 'in_transit' && $oldStatus != 'in_transit') {
             $delivery->delivery_date = now();
         }
 
         $delivery->save();
 
-        // Update order status jika diperlukan
-        if ($request->status == 'delivered' && $order->status == 'processing') {
+        if ($newStatus == 'delivered' && $order->status != 'completed') {
             $order->status = 'completed';
+            $order->save();
+        } elseif ($newStatus == 'in_transit' && $order->status == 'pending') {
+            $order->status = 'processing';
             $order->save();
         }
 
