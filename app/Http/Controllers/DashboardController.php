@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Auth;
@@ -13,12 +14,18 @@ class DashboardController extends Controller
     public function index()
     {
         if (Auth::user()->role === 'admin') {
-            // Data untuk admin dashboard
-            $totalProducts = Product::count();
-            $totalOrders = Order::count();
-            $pendingOrders = Order::where('status', 'pending')->count();
-            $processingOrders = Order::where('status', 'processing')->count();
+            // Data untuk admin dashboard - filter berdasarkan admin yang login
+            $totalProducts = Product::where('admin_id', Auth::id())->count();
+
+            // Dapatkan order yang berkaitan dengan produk admin ini
+            $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+            $orderIds = OrderDetail::whereIn('product_id', $productIds)->pluck('order_id')->unique();
+
+            $totalOrders = Order::whereIn('id', $orderIds)->count();
+            $pendingOrders = Order::whereIn('id', $orderIds)->where('status', 'pending')->count();
+            $processingOrders = Order::whereIn('id', $orderIds)->where('status', 'processing')->count();
             $recentOrders = Order::with('customer')
+                ->whereIn('id', $orderIds)
                 ->orderBy('created_at', 'desc')
                 ->take(10)
                 ->get();

@@ -16,7 +16,13 @@ class Product extends Model
         'image',
         'product_category_id',
         'discount_id',
+        'admin_id',
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'admin_id');
+    }
 
     public function category(): BelongsTo
     {

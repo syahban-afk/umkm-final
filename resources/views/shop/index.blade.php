@@ -8,31 +8,31 @@
                 <div class="relative h-56 overflow-hidden rounded-lg md:h-96">
                     <!-- Item 1 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src="https://dummyimage.com/600x400/ffffff/000000"
+                        <img src={{asset("/corousel/bag.jpeg")}}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 2 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src="https://dummyimage.com/600x400/ffffff/000000"
+                        <img src={{asset("/corousel/handphone.jpeg")}}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 3 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item="active">
-                        <img src="https://dummyimage.com/600x400/ffffff/000000"
+                        <img src={{asset("/corousel/headphone.png")}}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 4 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src="https://dummyimage.com/600x400/ffffff/000000"
+                        <img src={{asset("/corousel/laptop.png")}}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 5 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src="https://dummyimage.com/600x400/ffffff/000000"
+                        <img src={{asset("/corousel/shoes.jpeg")}}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>

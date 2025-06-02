@@ -5,24 +5,59 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DeliveryController extends Controller
 {
     public function index()
     {
-        $deliveries = Delivery::with(['order', 'order.customer'])->latest()->paginate(10);
+        // Dapatkan ID produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+
+        // Dapatkan ID order yang berisi produk milik admin
+        $orderIds = OrderDetail::whereIn('product_id', $productIds)->pluck('order_id')->unique();
+
+        $deliveries = Delivery::with(['order', 'order.customer'])
+            ->whereIn('order_id', $orderIds)
+            ->latest()
+            ->paginate(10);
+
         return view('admin.deliveries.index', compact('deliveries'));
     }
 
     public function edit(Order $order)
     {
+        // Verifikasi bahwa order ini berisi produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+        $orderContainsAdminProducts = OrderDetail::where('order_id', $order->id)
+            ->whereIn('product_id', $productIds)
+            ->exists();
+
+        if (!$orderContainsAdminProducts) {
+            return redirect()->route('admin.deliveries.index')
+                ->with('error', 'Anda tidak memiliki akses untuk mengedit pengiriman ini');
+        }
+
         $delivery = $order->delivery ?? new Delivery();
         return view('admin.deliveries.edit', compact('order', 'delivery'));
     }
 
     public function update(Request $request, Order $order)
     {
+        // Verifikasi bahwa order ini berisi produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+        $orderContainsAdminProducts = OrderDetail::where('order_id', $order->id)
+            ->whereIn('product_id', $productIds)
+            ->exists();
+
+        if (!$orderContainsAdminProducts) {
+            return redirect()->route('admin.deliveries.index')
+                ->with('error', 'Anda tidak memiliki akses untuk mengupdate pengiriman ini');
+        }
+
         $request->validate([
             'courier_name' => 'required|string|max:100',
             'tracking_number' => 'required|string|max:100',

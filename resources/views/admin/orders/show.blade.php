@@ -84,21 +84,35 @@
                                 @method('PATCH')
                                 <div class="flex items-center space-x-4">
                                     <label for="status"
-                                        class="text-sm font-medium text-gray-700 dark:text-gray-300">Update
+                                        class="text-sm font-medium text-gray-700 dark:text-gray-300">Last
                                         Status:</label>
                                     <select name="status" id="status"
-                                        class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring focus:ring-indigo-500">
+                                        class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring focus:ring-indigo-500 {{ $order->status === 'completed' ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : '' }}"
+                                        {{ $order->status === 'completed' ? 'disabled' : '' }}>
                                         <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>
-                                            Pending</option>
+                                            Pending
+                                        </option>
                                         <option value="processing"
-                                            {{ $order->status === 'processing' ? 'selected' : '' }}>Processing</option>
+                                            {{ $order->status === 'processing' ? 'selected' : '' }}>
+                                            Processing
+                                        </option>
                                         <option value="completed"
-                                            {{ $order->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                            {{ $order->status === 'completed' ? 'selected' : '' }}>
+                                            Completed
+                                        </option>
                                     </select>
-                                    <button type="submit"
-                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                                        Update
-                                    </button>
+                                    @if ($order->status === 'completed')
+                                        <button type="button"
+                                            class="bg-gray-100 text-gray-400 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
+                                            disabled>
+                                            Completed
+                                        </button>
+                                    @else
+                                        <button type="submit"
+                                            class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800">
+                                            Update
+                                        </button>
+                                    @endif
                                 </div>
                             </form>
                         </div>

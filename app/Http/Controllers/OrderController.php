@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Delivery;
+use App\Models\Product;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -14,7 +17,14 @@ class OrderController extends Controller
      */
     public function index()
     {
+        // Dapatkan ID produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+
+        // Dapatkan ID order yang berisi produk milik admin
+        $orderIds = OrderDetail::whereIn('product_id', $productIds)->pluck('order_id')->unique();
+
         $orders = Order::with(['customer', 'payment'])
+            ->whereIn('id', $orderIds)
             ->latest()
             ->paginate(10);
 
@@ -26,6 +36,17 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
+        // Verifikasi bahwa order ini berisi produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+        $orderContainsAdminProducts = OrderDetail::where('order_id', $order->id)
+            ->whereIn('product_id', $productIds)
+            ->exists();
+
+        if (!$orderContainsAdminProducts) {
+            return redirect()->route('admin.orders.index')
+                ->with('error', 'Anda tidak memiliki akses untuk melihat pesanan ini');
+        }
+
         $order->load(['orderDetails.product', 'payment', 'customer', 'delivery']);
         return view('admin.orders.show', compact('order'));
     }
@@ -35,6 +56,17 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
+        // Verifikasi bahwa order ini berisi produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+        $orderContainsAdminProducts = OrderDetail::where('order_id', $order->id)
+            ->whereIn('product_id', $productIds)
+            ->exists();
+
+        if (!$orderContainsAdminProducts) {
+            return redirect()->route('admin.orders.index')
+                ->with('error', 'Anda tidak memiliki akses untuk mengubah status pesanan ini');
+        }
+
         $request->validate([
             'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
