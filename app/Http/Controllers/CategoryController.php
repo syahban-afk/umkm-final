@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Product;
 
 class CategoryController extends Controller
 {
@@ -13,7 +15,20 @@ class CategoryController extends Controller
      */
     public function index()
     {
+        // Dapatkan ID kategori yang digunakan oleh produk milik admin
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+        $categoryIds = Product::where('admin_id', Auth::id())
+            ->pluck('product_category_id')
+            ->unique();
+
         $categories = ProductCategory::latest()->paginate(10);
+
+        // Tandai kategori yang digunakan oleh admin
+        $categories->getCollection()->transform(function ($category) use ($categoryIds) {
+            $category->used_by_admin = $categoryIds->contains($category->id);
+            return $category;
+        });
+
         return view('admin.categories.index', compact('categories'));
     }
 
@@ -35,7 +50,10 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        ProductCategory::create($request->all());
+        $data = $request->all();
+        $data['admin_id'] = Auth::id();
+
+        ProductCategory::create($data);
 
         return redirect()->route('admin.categories.index')
             ->with('success', 'Kategori berhasil ditambahkan');
@@ -46,6 +64,18 @@ class CategoryController extends Controller
      */
     public function edit(ProductCategory $category)
     {
+        // Verifikasi bahwa kategori ini dibuat oleh admin yang login
+        // atau digunakan oleh produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+        $categoryUsedByAdmin = Product::whereIn('id', $productIds)
+            ->where('product_category_id', $category->id)
+            ->exists();
+
+        if (!$categoryUsedByAdmin && $category->admin_id !== Auth::id()) {
+            return redirect()->route('admin.categories.index')
+                ->with('error', 'Anda tidak memiliki akses untuk mengedit kategori ini');
+        }
+
         return view('admin.categories.edit', compact('category'));
     }
 
@@ -54,6 +84,18 @@ class CategoryController extends Controller
      */
     public function update(Request $request, ProductCategory $category)
     {
+        // Verifikasi bahwa kategori ini dibuat oleh admin yang login
+        // atau digunakan oleh produk milik admin yang login
+        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
+        $categoryUsedByAdmin = Product::whereIn('id', $productIds)
+            ->where('product_category_id', $category->id)
+            ->exists();
+
+        if (!$categoryUsedByAdmin && $category->admin_id !== Auth::id()) {
+            return redirect()->route('admin.categories.index')
+                ->with('error', 'Anda tidak memiliki akses untuk mengupdate kategori ini');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -70,6 +112,12 @@ class CategoryController extends Controller
      */
     public function destroy(ProductCategory $category)
     {
+        // Verifikasi bahwa kategori ini dibuat oleh admin yang login
+        if ($category->admin_id !== Auth::id()) {
+            return redirect()->route('admin.categories.index')
+                ->with('error', 'Anda tidak memiliki akses untuk menghapus kategori ini');
+        }
+
         // Periksa apakah kategori memiliki produk terkait
         if ($category->products()->count() > 0) {
             return redirect()->route('admin.categories.index')

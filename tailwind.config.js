@@ -12,9 +12,18 @@ export default {
 
     theme: {
         extend: {
-            fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+            keyframes: {
+                'purple-to-blue': {
+                    '0%': { color: '#8b5cf6' }, // purple-500
+                    '100%': { color: '#3b82f6' }, // blue-500
+                }
             },
+            animation: {
+                'purple-to-blue': 'purple-to-blue 2s ease-in-out infinite alternate',
+            }
+        },
+        fontFamily: {
+            sans: ['Figtree', ...defaultTheme.fontFamily.sans],
         },
     },
 

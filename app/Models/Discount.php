@@ -12,7 +12,8 @@ class Discount extends Model
         'discount_category_id',
         'percentage',
         'start_date',
-        'end_date'
+        'end_date',
+        'admin_id'
     ];
 
     protected $casts = [
@@ -34,5 +35,10 @@ class Discount extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }

@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-40 ">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -52,11 +52,11 @@
                         </div>
                     </div>
 
-                    <x-nav-link href="#" :active="false">
+                    <x-nav-link href="/about" :active="false">
                         {{ __('Tentang Kami') }}
                     </x-nav-link>
 
-                    <x-nav-link href="#" :active="false">
+                    <x-nav-link href="/contact" :active="false">
                         {{ __('Kontak') }}
                     </x-nav-link>
                 </div>

@@ -9,6 +9,13 @@ use App\Http\Controllers\ReviewController;
 
 Route::get('/', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/produk/{product}', [ShopController::class, 'show'])->name('shop.show');
+Route::get('/about', function () {
+    return view('shop.about');
+});
+
+Route::get('/contact', function () {
+    return view('shop.contact');
+});
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -23,5 +30,5 @@ Route::middleware('auth')->group(function () {
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.delete');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 require __DIR__ . '/shop.php';

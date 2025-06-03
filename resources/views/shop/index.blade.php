@@ -14,7 +14,7 @@
                     </div>
                     <!-- Item 2 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src={{asset("/corousel/handphone.jpeg")}}
+                        <img src={{asset("/corousel/handphone.png")}}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
@@ -79,7 +79,7 @@
                 <!-- Sidebar Filter -->
                 <aside id="filterSidebar"
                     class="w-full md:w-1/4 bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6 mb-6 md:mb-0 hidden md:block">
-                    <form action="{{ route('shop.index') }}" method="GET" class="space-y-4">
+                    <form action="{{ route('shop.index') }}" method="GET" class="space-y-4 sticky top-[150px]">
                         <!-- Pencarian -->
                         <div>
                             <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
