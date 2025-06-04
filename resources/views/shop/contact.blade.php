@@ -32,7 +32,7 @@
                                 </p>
                                 <br>
                                 <p>
-                                    Outside of coding, I actively contribute to school organizations, such as OSIS
+                                    Outside of coding, I actively contribute to school organizations, such as Student Council
                                     and robotics extracurriculars, and have participated in several regional and
                                     national
                                     competitions.
