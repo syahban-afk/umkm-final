@@ -52,9 +52,6 @@
                                     <x-dropdown-link :href="route('admin.products.index')" class="px-4 py-2 text-sm">
                                         {{ __('Produk') }}
                                     </x-dropdown-link>
-                                    <x-dropdown-link :href="route('admin.categories.index')" class="px-4 py-2 text-sm">
-                                        {{ __('Kategori') }}
-                                    </x-dropdown-link>
                                     <x-dropdown-link :href="route('admin.discounts.index')" class="px-4 py-2 text-sm">
                                         {{ __('Diskon') }}
                                     </x-dropdown-link>

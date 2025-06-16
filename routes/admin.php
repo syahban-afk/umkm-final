@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DeliveryController;
@@ -19,9 +18,6 @@ use App\Http\Controllers\DeliveryController;
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Product Routes
     Route::resource('products', ProductController::class);
-
-    // Category Routes
-    Route::resource('categories', CategoryController::class);
 
     // Discount Routes
     Route::resource('discounts', DiscountController::class);

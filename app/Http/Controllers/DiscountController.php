@@ -16,25 +16,11 @@ class DiscountController extends Controller
      */
     public function index()
     {
-        // Dapatkan ID produk milik admin yang login
-        $productIds = Product::where('admin_id', Auth::id())->pluck('id');
-
-        // Dapatkan ID diskon yang digunakan oleh produk milik admin
-        $discountIds = Product::whereIn('id', $productIds)
-            ->whereNotNull('discount_id')
-            ->pluck('discount_id')
-            ->unique();
-
-        // Ambil diskon dengan relasi dan paginasi
+        // Dapatkan diskon milik admin yang login
         $discounts = Discount::with('category')
+            ->where('admin_id', Auth::id())
             ->latest()
             ->paginate(10);
-
-        // Tandai diskon yang digunakan oleh admin
-        $discounts->getCollection()->transform(function ($discount) use ($discountIds) {
-            $discount->used_by_admin = $discountIds->contains($discount->id);
-            return $discount;
-        });
 
         return view('admin.discounts.index', compact('discounts'));
     }
@@ -45,7 +31,11 @@ class DiscountController extends Controller
      */
     public function create()
     {
-        $categories = DiscountCategory::all();
+        // Ambil kategori diskon milik admin yang login atau yang belum dimiliki admin manapun
+        $categories = DiscountCategory::where('admin_id', Auth::id())
+            ->orWhereNull('admin_id')
+            ->get();
+
         return view('admin.discounts.create', compact('categories'));
     }
 
@@ -87,7 +77,11 @@ class DiscountController extends Controller
                 ->with('error', 'Anda tidak memiliki akses untuk mengedit diskon ini');
         }
 
-        $categories = DiscountCategory::all();
+        // Ambil kategori diskon milik admin yang login atau yang belum dimiliki admin manapun
+        $categories = DiscountCategory::where('admin_id', Auth::id())
+            ->orWhereNull('admin_id')
+            ->get();
+
         return view('admin.discounts.edit', compact('discount', 'categories'));
     }
 
@@ -149,22 +143,25 @@ class DiscountController extends Controller
      */
     public function categoryIndex()
     {
-        // Dapatkan ID kategori diskon yang digunakan oleh diskon milik admin
-        $discountIds = Discount::where('admin_id', Auth::id())->pluck('id');
-        $categoryIds = Discount::whereIn('id', $discountIds)
+        // Ambil semua ID kategori yang digunakan oleh diskon milik admin saat ini
+        $categoryIds = Discount::where('admin_id', Auth::id())
             ->pluck('discount_category_id')
             ->unique();
 
-        $categories = DiscountCategory::latest()->paginate(10);
+        // Ambil kategori-kategori tersebut saja
+        $categories = DiscountCategory::whereIn('id', $categoryIds)
+            ->latest()
+            ->paginate(10);
 
-        $categories->getCollection()->transform(function ($category) use ($categoryIds) {
-            $category->used_by_admin = $categoryIds->contains($category->id);
+        // Tandai bahwa kategori ini digunakan oleh admin
+        $categories->getCollection()->transform(function ($category) {
+            $category->used_by_admin = true;
             return $category;
         });
 
         return view('admin.discounts.categories.index', compact('categories'));
     }
-
+    
     /**
      * Show the form for creating a new discount category.
      */

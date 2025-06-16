@@ -8,7 +8,7 @@ use App\Http\Controllers\OrderController;
 Route::get('/', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/produk/{product}', [ShopController::class, 'show'])->name('shop.show');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'customer'])->group(function () {
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
