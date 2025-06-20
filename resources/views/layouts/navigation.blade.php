@@ -135,9 +135,6 @@
                 <x-responsive-nav-link :href="route('admin.products.index')" :active="request()->routeIs('admin.products.*')">
                     {{ __('Produk') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')" class="block pl-6 pr-4 py-2">
-                    {{ __('Kategori') }}
-                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.discounts.index')" :active="request()->routeIs('admin.discounts.*')" class="block pl-6 pr-4 py-2">
                     {{ __('Diskon') }}
                 </x-responsive-nav-link>

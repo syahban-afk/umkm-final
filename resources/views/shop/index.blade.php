@@ -8,31 +8,31 @@
                 <div class="relative h-56 overflow-hidden rounded-lg md:h-96">
                     <!-- Item 1 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src={{asset("/corousel/bag.jpeg")}}
+                        <img src={{ asset('/corousel/bag.jpeg') }}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 2 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src={{asset("/corousel/handphone.png")}}
+                        <img src={{ asset('/corousel/handphone.png') }}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 3 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item="active">
-                        <img src={{asset("/corousel/headphone.png")}}
+                        <img src={{ asset('/corousel/headphone.png') }}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 4 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src={{asset("/corousel/laptop.png")}}
+                        <img src={{ asset('/corousel/laptop.png') }}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
                     <!-- Item 5 -->
                     <div class="hidden duration-200 ease-linear" data-carousel-item>
-                        <img src={{asset("/corousel/shoes.jpeg")}}
+                        <img src={{ asset('/corousel/shoes.jpeg') }}
                             class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                             alt="Iklan guys">
                     </div>
@@ -260,15 +260,34 @@ dark:hover:shadow-[0_0_20px_rgba(99,102,241,0.6)]
                                             Stok: {{ $product->stock }}
                                         </div>
 
+                                        @php
+                                            $user = auth()->user();
+                                        @endphp
+
                                         <form action="{{ route('cart.add', $product) }}" method="POST">
                                             @csrf
                                             <input type="hidden" name="quantity" value="1">
+
+                                            @php
+                                                $isOutOfStock = $product->stock < 1;
+                                                $isAdmin = $user && $user->role === 'admin';
+                                                $buttonDisabled = $isOutOfStock || $isAdmin;
+                                            @endphp
+
                                             <button type="submit"
-                                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition duration-300 {{ $product->stock < 1 ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                {{ $product->stock < 1 ? 'disabled' : '' }}>
-                                                {{ $product->stock < 1 ? 'Stok Habis' : 'Tambah ke Keranjang' }}
+                                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition duration-300
+            {{ $buttonDisabled ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                {{ $buttonDisabled ? 'disabled' : '' }}>
+                                                @if ($isOutOfStock)
+                                                    Stok Habis
+                                                @elseif ($isAdmin)
+                                                    Tidak Tersedia untuk Admin
+                                                @else
+                                                    Tambah ke Keranjang
+                                                @endif
                                             </button>
                                         </form>
+
                                     </div>
                                 </div>
                             @empty
